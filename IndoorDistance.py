@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 import tkinter
+import matplotlib.pyplot as plt
 import networkx as nx
 
 from tkinter import *
@@ -29,10 +30,8 @@ def calculate_path():
     print("Caculatepath")
 
 def processOK():
-    print("OK button is clicked")
+    print("Caculate button is clicked")
 
-def processCancel():
-    print("Cancel button is clicked")
 
 def click(event):
     global total_click
