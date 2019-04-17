@@ -3,6 +3,7 @@ import tkinter
 import matplotlib.pyplot as plt
 import networkx as nx
 import itertools
+
 from tkinter import *
 from PIL import ImageTk, Image
 
