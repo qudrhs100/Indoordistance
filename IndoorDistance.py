@@ -3,6 +3,7 @@ import tkinter
 import matplotlib.pyplot as plt
 import networkx as nx
 import itertools
+import numpy as np
 
 from tkinter import *
 from PIL import ImageTk, Image
@@ -25,6 +26,11 @@ class Point:
     def __init__(self,x,y):
         self.x = x
         self.y = y
+
+def angle_between(p1, p2):
+    ang1 = np.arctan2(*p1[::-1])
+    ang2 = np.arctan2(*p2[::-1])
+    return np.rad2deg((ang1 - ang2) % (2 * np.pi))
 
 def ccw(A,B,C):
     return (C.y-A.y) * (B.x-A.x) > (B.y-A.y) * (C.x-A.x)
