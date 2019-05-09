@@ -1,7 +1,6 @@
 import xml.etree.ElementTree as ET
 import tkinter
 import matplotlib.pyplot as plt
-import networkx as nx
 import itertools
 import numpy as np
 
@@ -21,8 +20,9 @@ total_point=[]
 total_line=[]
 
 total_door=[]
-G = nx.Graph()
 
+room_door={}
+door_accord={}
 class Point:
     def __init__(self,x,y):
         self.x = x
@@ -71,17 +71,21 @@ def visibility():
             canvas.create_line(Door_A.x, Door_A.y, Door_B.x, Door_B.y, width=2, fill="red")
 
     for i in enumerate(total_line):
-        for j in range(len(i[1])):
+        temp=i[1]
+        temp.append(i[1][2])
+        temp.append(i[1][3])
+        for j in range(len(temp)):
             if j%2==1:continue
-            if j+3>len(i[1]):continue
-            A = (float(total_line[i[0]][j]),float(total_line[i[0]][j+1]))
-            B = (float(total_line[i[0]][j+1]), float(total_line[i[0]][j + 2]))
-            print(A,B)
-            # canvas.create_oval(event.x, event.y, event.x, event.y, width=5, fill="#ff0000")
-            # print(angle_between(A, B))
-        # print(len(i[1]))
+            if j+6>len(i[1]):continue
+            A1 = (float(total_line[i[0]][j]),float(total_line[i[0]][j+1]))
+            B1 = (float(total_line[i[0]][j+2]), float(total_line[i[0]][j + 3]))
+            C1 = (float(total_line[i[0]][j+4]), float(total_line[i[0]][j + 5]))
+            A2= (B1[0]-A1[0],B1[1]-A1[1])
+            B2 = (C1[0] - B1[0], C1[1] - B1[1])
+            # print(angle_between(A2, B2))
+            if(angle_between(A2, B2)<180):
+                canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
 
-        print("----------------------")
 
 
 def click(event):
@@ -112,27 +116,34 @@ def main():
         total_line.append(list)
     ##Cellspace
 
-    for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceBoundaryMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpaceBoundary/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceBoundaryGeometry/{http://www.opengis.net/indoorgml/1.0/core}geometry2D/{http://www.opengis.net/gml/3.2}LineString"):
-        sum_x=0
-        sum_y=0
-        for j in i.findall("./{http://www.opengis.net/gml/3.2}pos"):
+
+    for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceBoundaryMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpaceBoundary"):
+        gml_id=i.get('{http://www.opengis.net/gml/3.2}id')
+        if gml_id.find("REVERSE")!= -1 : continue ##Reverse가 들어가 있을 경우 continue
+        sum_x = 0
+        sum_y = 0
+        for j in i.findall("{http://www.opengis.net/indoorgml/1.0/core}cellSpaceBoundaryGeometry/{http://www.opengis.net/indoorgml/1.0/core}geometry2D/{http://www.opengis.net/gml/3.2}LineString/{http://www.opengis.net/gml/3.2}pos"):
             words=j.text.split()
             sum_x+=float(words[0])
             sum_y+=float(words[1])
         canvas.create_image(sum_x/2-15, sum_y/2-15, image=img, anchor=NW)
         total_door.append((sum_x/2,sum_y/2))
-    ##Cellspaceboundary
-    # print(total_line)
+
+    for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpace"):
+        # print(i.find('{http://www.opengis.net/gml/3.2}name').text)
+        # print(i.find('{http://www.opengis.net/indoorgml/1.0/core}/duality'))
+        # print(i.find('{http://www.opengis.net/indoorgml/1.0/core}duality').get('{http://www.w3.org/1999/xlink}href')[1:])
+        room_door[i.find('{http://www.opengis.net/gml/3.2}name').text]=i.find('{http://www.opengis.net/indoorgml/1.0/core}duality').get('{http://www.w3.org/1999/xlink}href')[1:]
 
     remove_duplication()
-    G.add_nodes_from(total_door)
+    print(total_door)
+    # G.add_nodes_from(total_door)
     visibility()
 
-    # nx.draw_networkx(G, with_labels=True)
     plt.show()
     canvas.pack()
     btn.pack()
-    # window.mainloop()
+    window.mainloop()
 
 if __name__ == "__main__":
     main()
