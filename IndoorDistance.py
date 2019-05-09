@@ -3,9 +3,77 @@ import tkinter
 import matplotlib.pyplot as plt
 import itertools
 import numpy as np
+from collections import defaultdict
 
 from tkinter import *
 from PIL import ImageTk, Image
+
+
+
+class Graph():
+    def __init__(self):
+        """
+        self.edges is a dict of all possible next nodes
+        e.g. {'X': ['A', 'B', 'C', 'E'], ...}
+        self.weights has all the weights between two nodes,
+        with the two nodes as a tuple as the key
+        e.g. {('X', 'A'): 7, ('X', 'B'): 2, ...}
+        """
+        self.edges = defaultdict(list)
+        self.weights = {}
+
+    def add_edge(self, from_node, to_node, weight):
+        # Note: assumes edges are bi-directional
+        self.edges[from_node].append(to_node)
+        self.edges[to_node].append(from_node)
+        self.weights[(from_node, to_node)] = weight
+        self.weights[(to_node, from_node)] = weight
+
+def angle_between(p1, p2):
+    ang1 = np.arctan2(*p1[::-1])
+    ang2 = np.arctan2(*p2[::-1])
+    return np.rad2deg((ang1 - ang2) % (2 * np.pi))
+
+
+def dijsktra(graph, initial, end):
+    # shortest paths is a dict of nodes
+    # whose value is a tuple of (previous node, weight)
+    shortest_paths = {initial: (None, 0)}
+    current_node = initial
+    visited = set()
+
+    while current_node != end:
+        visited.add(current_node)
+        destinations = graph.edges[current_node]
+        weight_to_current_node = shortest_paths[current_node][1]
+
+        for next_node in destinations:
+            weight = graph.weights[(current_node, next_node)] + weight_to_current_node
+            if next_node not in shortest_paths:
+                shortest_paths[next_node] = (current_node, weight)
+            else:
+                current_shortest_weight = shortest_paths[next_node][1]
+                if current_shortest_weight > weight:
+                    shortest_paths[next_node] = (current_node, weight)
+
+        next_destinations = {node: shortest_paths[node] for node in shortest_paths if node not in visited}
+        if not next_destinations:
+            return "Route Not Possible"
+        # next node is the destination with the lowest weight
+        current_node = min(next_destinations, key=lambda k: next_destinations[k][1])
+
+    # Work back through destinations in shortest path
+    path = []
+    while current_node is not None:
+        path.append(current_node)
+        next_node = shortest_paths[current_node][0]
+        current_node = next_node
+    # Reverse path
+    path = path[::-1]
+    return path
+
+#############################################################################
+
 
 
 tree = ET.parse('cellspaceboundary_door.gml')
@@ -23,6 +91,8 @@ total_door=[]
 
 room_door={}
 door_accord={}
+corner_accord={}
+
 class Point:
     def __init__(self,x,y):
         self.x = x
@@ -45,10 +115,6 @@ def calculate_path():
 def processOK():
     print("Caculate button is clicked")
 
-def remove_duplication():
-    global total_door
-    total_door = list(set(total_door))
-
 def visibility():
 
     line_segment=[]
@@ -69,7 +135,7 @@ def visibility():
                 test.append((Door_A,Door_B,Line_A,Line_B))
         if cnt==2:
             canvas.create_line(Door_A.x, Door_A.y, Door_B.x, Door_B.y, width=2, fill="red")
-
+    corner_count=0
     for i in enumerate(total_line):
         temp=i[1]
         temp.append(i[1][2])
@@ -85,6 +151,10 @@ def visibility():
             # print(angle_between(A2, B2))
             if(angle_between(A2, B2)<180):
                 canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
+                corner_accord["CORNER"+str(corner_count)]=(B1[0], B1[1])
+                corner_count+=1
+
+
 
 
 
@@ -128,6 +198,7 @@ def main():
             sum_y+=float(words[1])
         canvas.create_image(sum_x/2-15, sum_y/2-15, image=img, anchor=NW)
         total_door.append((sum_x/2,sum_y/2))
+        door_accord[gml_id]=(sum_x/2,sum_y/2)
 
     for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpace"):
         # print(i.find('{http://www.opengis.net/gml/3.2}name').text)
@@ -135,10 +206,9 @@ def main():
         # print(i.find('{http://www.opengis.net/indoorgml/1.0/core}duality').get('{http://www.w3.org/1999/xlink}href')[1:])
         room_door[i.find('{http://www.opengis.net/gml/3.2}name').text]=i.find('{http://www.opengis.net/indoorgml/1.0/core}duality').get('{http://www.w3.org/1999/xlink}href')[1:]
 
-    remove_duplication()
-    print(total_door)
-    # G.add_nodes_from(total_door)
     visibility()
+    print(corner_accord)
+
 
     plt.show()
     canvas.pack()
