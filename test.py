@@ -1,5 +1,8 @@
 import numpy as np
 from collections import defaultdict
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+
 from math import *
 class Graph():
     def __init__(self):
@@ -96,6 +99,10 @@ b=(0,0)
 def euclidean_distance(x,y):
     return sqrt(sum(pow(a-b,2) for a, b in zip(x, y)))
 
-x=(1,1)
-y=(0,0)
-print(euclidean_distance(x,y))
+# x=(1,1)
+# # y=(0,0)
+# # print(euclidean_distance(x,y))
+
+point = Point(2, 0.5)
+polygon = Polygon([(0, 0), (0, 1), (1, 1), (1, 0),(0, 0)])
+print(polygon.contains(point))

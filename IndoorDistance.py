@@ -136,10 +136,13 @@ def processOK():
         graph.add_edge(*edge)
     # print("FROM : ",start_room," TO : " ,dest_room)
 
-    message = tkinter.Message(window, text="FROM : "+start_room+" TO : " +dest_room, width=400, relief="solid")
-    message.pack()
+    distance_sum=0
+
     canvas.create_line(start_coord[0],start_coord[1], door_accord[room_door[start_room]][0], door_accord[room_door[start_room]][1], width=2, fill="red")
+    distance_sum=distance_sum+euclidean_distance(start_coord,door_accord[room_door[start_room]])
+
     canvas.create_line(dest_coord[0], dest_coord[1], door_accord[room_door[dest_room]][0], door_accord[room_door[dest_room]][1], width=2, fill="red")
+    distance_sum = distance_sum + euclidean_distance(dest_coord, door_accord[room_door[dest_room]])
 
     # print(dijsktra(graph, room_door[start_room], room_door[dest_room]))
     PATH=dijsktra(graph, room_door[start_room], room_door[dest_room])
@@ -147,6 +150,12 @@ def processOK():
         if i>len(dijsktra(graph, room_door[start_room], room_door[dest_room]))-2:continue
         canvas.create_line(door_and_corner[PATH[i]][0], door_and_corner[PATH[i]][1], door_and_corner[PATH[i+1]][0],
                            door_and_corner[PATH[i + 1]][1], width=2, fill="red")
+        distance_sum=distance_sum+euclidean_distance(door_and_corner[PATH[i]],door_and_corner[PATH[i+1]])
+
+    message = tkinter.Message(window, text="FROM : "+start_room + " TO : " +dest_room, width=400, relief="solid")
+    message1 = tkinter.Message(window, text="Sum of Length : " + str(distance_sum), width=400, relief="solid")
+    message.pack()
+    message1.pack()
 
 
 
