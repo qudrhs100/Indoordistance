@@ -3,7 +3,10 @@ import tkinter
 import matplotlib.pyplot as plt
 import itertools
 import numpy as np
+from math import *
 from collections import defaultdict
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 
 from tkinter import *
 from PIL import ImageTk, Image
@@ -76,6 +79,7 @@ def dijsktra(graph, initial, end):
 
 
 
+
 tree = ET.parse('cellspaceboundary_door.gml')
 root = tree.getroot()
 window = tkinter.Tk()
@@ -83,17 +87,24 @@ window.title("Indoor Distance")
 canvas = tkinter.Canvas(window, width=500, height=500)
 img = ImageTk.PhotoImage(Image.open("Door.png"))
 total_click = 0
-
-total_point=[]
 total_line=[]
-
 total_door=[]
 
-room_door={}
-door_accord={}
-corner_accord={}
+room_door={}##Room<->Door duality 관계확인
 
-class Point:
+cellspace_accord={}##cellspace 와 각각의 좌표
+
+door_accord={}##door들과 각각의 좌표값
+corner_accord={}##coner들과 각각의 좌표값
+door_and_corner={}##door와 corner(Graph생성에 포함되어야 한는 node)들과 그의 좌표
+
+graph = Graph()##최소거리를 계산하기 위한 그래프
+edges = []##갈수 있는 거리들을 visualization 하기 위한 list
+
+start_room=""
+dest_room=""
+
+class Point_make:
     def __init__(self,x,y):
         self.x = x
         self.y = y
@@ -102,6 +113,9 @@ def angle_between(p1, p2):
     ang1 = np.arctan2(*p1[::-1])
     ang2 = np.arctan2(*p2[::-1])
     return np.rad2deg((ang1 - ang2) % (2 * np.pi))
+
+def euclidean_distance(x,y):
+    return sqrt(sum(pow(a-b,2) for a, b in zip(x, y)))
 
 def ccw(A,B,C):
     return (C.y-A.y) * (B.x-A.x) > (B.y-A.y) * (C.x-A.x)
@@ -122,19 +136,6 @@ def visibility():
         for j in range(int(len(i)/2)-1):
             line_segment.append(((i[j*2],i[j*2+1]),(i[j*2+2],i[j*2+3])))
 
-    for i in list(itertools.combinations(total_door, 2)):
-        test=[]
-        Door_A = Point(float(i[0][0]),float(i[0][1]))
-        Door_B = Point(float(i[1][0]),float(i[1][1]))
-        cnt =0
-        for j in line_segment:
-            Line_A = Point(float(j[0][0]),float(j[0][1]))
-            Line_B = Point(float(j[1][0]),float(j[1][1]))
-            if intersect(Door_A,Door_B,Line_A,Line_B)==True:
-                cnt+=1
-                test.append((Door_A,Door_B,Line_A,Line_B))
-        if cnt==2:
-            canvas.create_line(Door_A.x, Door_A.y, Door_B.x, Door_B.y, width=2, fill="red")
     corner_count=0
     for i in enumerate(total_line):
         temp=i[1]
@@ -152,8 +153,25 @@ def visibility():
             if(angle_between(A2, B2)<180):
                 canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
                 corner_accord["CORNER"+str(corner_count)]=(B1[0], B1[1])
+                door_and_corner["CORNER"+str(corner_count)]=(B1[0], B1[1])
                 corner_count+=1
 
+    for i in list(itertools.combinations(door_and_corner, 2)):
+        test=[]
+        Door_A = Point_make(float(door_and_corner[i[0]][0]),float(door_and_corner[i[0]][1]))
+        Door_B = Point_make(float(door_and_corner[i[1]][0]),float(door_and_corner[i[1]][1]))
+        cnt =0
+        for j in line_segment:
+            Line_A = Point_make(float(j[0][0]),float(j[0][1]))
+            Line_B = Point_make(float(j[1][0]),float(j[1][1]))
+            if intersect(Door_A,Door_B,Line_A,Line_B)==True:
+                cnt+=1
+                test.append((Door_A,Door_B,Line_A,Line_B))
+        if cnt<3:
+            canvas.create_line(Door_A.x, Door_A.y, Door_B.x, Door_B.y, width=2, fill="red")
+            temp_A=(Door_A.x,Door_A.y)
+            temp_B=(Door_B.x,Door_B.y)
+            edges.append((i[0],i[1],euclidean_distance(temp_A,temp_B)))
 
 
 
@@ -161,10 +179,10 @@ def visibility():
 def click(event):
     global total_click
     total_click=total_click+1
-    if total_click==2:
-        calculate_path()
     if total_click>2:
         return
+
+
     print("Button click", event.x, event.y)
     print (total_click)
     canvas.create_oval(event.x, event.y, event.x,  event.y, width=5, fill="#ff0000")
@@ -174,17 +192,20 @@ def click(event):
 def main():
     btn = Button(window, text="Calculate", command=processOK,bg='yellow')
     canvas.bind("<Button-1>", click)
-    for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpace/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceGeometry/{http://www.opengis.net/indoorgml/1.0/core}Geometry2D/{http://www.opengis.net/gml/3.2}Polygon/{http://www.opengis.net/gml/3.2}exterior/{http://www.opengis.net/gml/3.2}LinearRing"):
+
+
+    for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpace"):
+        CS_gml_id=i.get('{http://www.opengis.net/gml/3.2}id')
+        room_door[CS_gml_id]=i.find('{http://www.opengis.net/indoorgml/1.0/core}duality').get('{http://www.w3.org/1999/xlink}href')[1:]
         list=[]
-        for j in i.findall("./{http://www.opengis.net/gml/3.2}pos"):
+        for j in i.findall("./{http://www.opengis.net/indoorgml/1.0/core}cellSpaceGeometry/{http://www.opengis.net/indoorgml/1.0/core}Geometry2D/{http://www.opengis.net/gml/3.2}Polygon/{http://www.opengis.net/gml/3.2}exterior/{http://www.opengis.net/gml/3.2}LinearRing/{http://www.opengis.net/gml/3.2}pos"):
             words=j.text.split()
             list.append(str(float(words[0])))
             list.append(str(float(words[1])))
-            input = Point(float(words[0]),float(words[1]))
-            total_point.append(input)
+            input = Point_make(float(words[0]),float(words[1]))
         canvas.create_polygon(list, outline='black', fill='ivory3', width=2)
         total_line.append(list)
-    ##Cellspace
+        cellspace_accord[CS_gml_id]=list
 
 
     for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceBoundaryMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpaceBoundary"):
@@ -199,21 +220,17 @@ def main():
         canvas.create_image(sum_x/2-15, sum_y/2-15, image=img, anchor=NW)
         total_door.append((sum_x/2,sum_y/2))
         door_accord[gml_id]=(sum_x/2,sum_y/2)
-
-    for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpace"):
-        # print(i.find('{http://www.opengis.net/gml/3.2}name').text)
-        # print(i.find('{http://www.opengis.net/indoorgml/1.0/core}/duality'))
-        # print(i.find('{http://www.opengis.net/indoorgml/1.0/core}duality').get('{http://www.w3.org/1999/xlink}href')[1:])
-        room_door[i.find('{http://www.opengis.net/gml/3.2}name').text]=i.find('{http://www.opengis.net/indoorgml/1.0/core}duality').get('{http://www.w3.org/1999/xlink}href')[1:]
-
+        door_and_corner[gml_id] = (sum_x/2,sum_y/2)
     visibility()
-    print(corner_accord)
 
+
+    for key, value in cellspace_accord.items():
+        print(key, value)
 
     plt.show()
     canvas.pack()
     btn.pack()
-    window.mainloop()
+    # window.mainloop()
 
 if __name__ == "__main__":
     main()
