@@ -155,7 +155,7 @@
             <core:cellSpaceMember>
                 <core:CellSpace gml:id="C7">
                     <gml:description>storey="F1":</gml:description>
-                    <gml:name>C7</gml:name>
+                    <gml:name>CORRIDOR</gml:name>
                     <gml:boundedBy xsi:nil="true"/>
                     <core:cellSpaceGeometry>
                         <core:Geometry2D>
