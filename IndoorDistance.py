@@ -99,7 +99,7 @@ corner_accord={}##coner들과 각각의 좌표값
 door_and_corner={}##door와 corner(Graph생성에 포함되어야 한는 node)들과 그의 좌표
 
 graph = Graph()##최소거리를 계산하기 위한 그래프
-edges = []##갈수 있는 거리들을 visualization 하기 위한 list
+edges = []##그래프의 edges
 
 start_room=""
 dest_room=""
@@ -126,8 +126,15 @@ def intersect(A,B,C,D):
 def calculate_path():
     print("Caculatepath")
 
+
 def processOK():
+    global edges
     print("Caculate button is clicked")
+    for edge in edges:
+        graph.add_edge(*edge)
+    print(start_room, "부터 ", dest_room, "까지 갑니당")
+    print(dijsktra(graph, room_door[start_room], room_door[dest_room]))
+
 
 def visibility():
 
@@ -178,13 +185,31 @@ def visibility():
 
 def click(event):
     global total_click
+    global start_room
+    global dest_room
     total_click=total_click+1
     if total_click>2:
         return
+    if total_click==1:
+        for key, value in cellspace_accord.items():
+            point = Point(event.x, event.y)
+            polygon=Polygon(value)
+            if polygon.contains(point)==True:
+                start_room=key
+
+
+    if total_click==2:
+        for key, value in cellspace_accord.items():
+            point = Point(event.x, event.y)
+            polygon = Polygon(value)
+            if polygon.contains(point)==True:
+                dest_room=key
+
+
 
 
     print("Button click", event.x, event.y)
-    print (total_click)
+    # print (total_click)
     canvas.create_oval(event.x, event.y, event.x,  event.y, width=5, fill="#ff0000")
     window.mainloop()
 
@@ -196,16 +221,20 @@ def main():
 
     for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpace"):
         CS_gml_id=i.get('{http://www.opengis.net/gml/3.2}id')
-        room_door[CS_gml_id]=i.find('{http://www.opengis.net/indoorgml/1.0/core}duality').get('{http://www.w3.org/1999/xlink}href')[1:]
+        # print(i.find('{http://www.opengis.net/indoorgml/1.0/core}partialboundedBy'))
+        if i.find('{http://www.opengis.net/indoorgml/1.0/core}partialboundedBy')!=None:
+            room_door[CS_gml_id]=i.find('{http://www.opengis.net/indoorgml/1.0/core}partialboundedBy').get('{http://www.w3.org/1999/xlink}href')[1:]
         list=[]
+        list_set=[]
         for j in i.findall("./{http://www.opengis.net/indoorgml/1.0/core}cellSpaceGeometry/{http://www.opengis.net/indoorgml/1.0/core}Geometry2D/{http://www.opengis.net/gml/3.2}Polygon/{http://www.opengis.net/gml/3.2}exterior/{http://www.opengis.net/gml/3.2}LinearRing/{http://www.opengis.net/gml/3.2}pos"):
             words=j.text.split()
             list.append(str(float(words[0])))
             list.append(str(float(words[1])))
-            input = Point_make(float(words[0]),float(words[1]))
+            input = (float(words[0]),float(words[1]))
+            list_set.append(input)
         canvas.create_polygon(list, outline='black', fill='ivory3', width=2)
         total_line.append(list)
-        cellspace_accord[CS_gml_id]=list
+        cellspace_accord[CS_gml_id]=list_set
 
 
     for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceBoundaryMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpaceBoundary"):
@@ -221,16 +250,18 @@ def main():
         total_door.append((sum_x/2,sum_y/2))
         door_accord[gml_id]=(sum_x/2,sum_y/2)
         door_and_corner[gml_id] = (sum_x/2,sum_y/2)
+
+
     visibility()
 
 
-    for key, value in cellspace_accord.items():
-        print(key, value)
-
+    # for key, value in cellspace_accord.items():
+    #     print(key, value)
+    print(edges)
     plt.show()
     canvas.pack()
     btn.pack()
-    # window.mainloop()
+    window.mainloop()
 
 if __name__ == "__main__":
     main()
