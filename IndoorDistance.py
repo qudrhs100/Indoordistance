@@ -89,7 +89,8 @@ img = ImageTk.PhotoImage(Image.open("Door.png"))
 total_click = 0
 total_line=[]
 total_door=[]
-
+start_coord=()
+dest_coord=()
 room_door={}##Room<->Door duality 관계확인
 
 cellspace_accord={}##cellspace 와 각각의 좌표
@@ -130,10 +131,24 @@ def calculate_path():
 def processOK():
     global edges
     print("Caculate button is clicked")
+    print(start_coord, "    ",dest_coord)
     for edge in edges:
         graph.add_edge(*edge)
-    print(start_room, "부터 ", dest_room, "까지 갑니당")
-    print(dijsktra(graph, room_door[start_room], room_door[dest_room]))
+    # print("FROM : ",start_room," TO : " ,dest_room)
+
+    message = tkinter.Message(window, text="FROM : "+start_room+" TO : " +dest_room, width=400, relief="solid")
+    message.pack()
+    canvas.create_line(start_coord[0],start_coord[1], door_accord[room_door[start_room]][0], door_accord[room_door[start_room]][1], width=2, fill="red")
+    canvas.create_line(dest_coord[0], dest_coord[1], door_accord[room_door[dest_room]][0], door_accord[room_door[dest_room]][1], width=2, fill="red")
+
+    # print(dijsktra(graph, room_door[start_room], room_door[dest_room]))
+    PATH=dijsktra(graph, room_door[start_room], room_door[dest_room])
+    for i,v in enumerate(PATH):
+        if i>len(dijsktra(graph, room_door[start_room], room_door[dest_room]))-2:continue
+        canvas.create_line(door_and_corner[PATH[i]][0], door_and_corner[PATH[i]][1], door_and_corner[PATH[i+1]][0],
+                           door_and_corner[PATH[i + 1]][1], width=2, fill="red")
+
+
 
 
 def visibility():
@@ -158,7 +173,7 @@ def visibility():
             B2 = (C1[0] - B1[0], C1[1] - B1[1])
             # print(angle_between(A2, B2))
             if(angle_between(A2, B2)<180):
-                canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
+                # canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
                 corner_accord["CORNER"+str(corner_count)]=(B1[0], B1[1])
                 door_and_corner["CORNER"+str(corner_count)]=(B1[0], B1[1])
                 corner_count+=1
@@ -175,7 +190,7 @@ def visibility():
                 cnt+=1
                 test.append((Door_A,Door_B,Line_A,Line_B))
         if cnt<3:
-            canvas.create_line(Door_A.x, Door_A.y, Door_B.x, Door_B.y, width=2, fill="red")
+            # canvas.create_line(Door_A.x, Door_A.y, Door_B.x, Door_B.y, width=2, fill="red")
             temp_A=(Door_A.x,Door_A.y)
             temp_B=(Door_B.x,Door_B.y)
             edges.append((i[0],i[1],euclidean_distance(temp_A,temp_B)))
@@ -185,6 +200,8 @@ def visibility():
 
 def click(event):
     global total_click
+    global start_coord
+    global dest_coord
     global start_room
     global dest_room
     total_click=total_click+1
@@ -193,14 +210,15 @@ def click(event):
     if total_click==1:
         for key, value in cellspace_accord.items():
             point = Point(event.x, event.y)
+            start_coord=(event.x, event.y)
             polygon=Polygon(value)
             if polygon.contains(point)==True:
                 start_room=key
 
-
     if total_click==2:
         for key, value in cellspace_accord.items():
             point = Point(event.x, event.y)
+            dest_coord=(event.x, event.y)
             polygon = Polygon(value)
             if polygon.contains(point)==True:
                 dest_room=key
@@ -257,7 +275,7 @@ def main():
 
     # for key, value in cellspace_accord.items():
     #     print(key, value)
-    print(edges)
+    # print(edges)
     plt.show()
     canvas.pack()
     btn.pack()
