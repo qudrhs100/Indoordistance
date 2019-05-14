@@ -80,7 +80,8 @@ def dijsktra(graph, initial, end):
 
 
 
-tree = ET.parse('cellspaceboundary_door.gml')
+# tree = ET.parse('cellspaceboundary_door.gml')
+tree = ET.parse('complex.gml')
 root = tree.getroot()
 window = tkinter.Tk()
 window.title("Indoor Distance")
@@ -151,7 +152,7 @@ def processOK():
         canvas.create_line(door_and_corner[PATH[i]][0], door_and_corner[PATH[i]][1], door_and_corner[PATH[i+1]][0],
                            door_and_corner[PATH[i + 1]][1], width=2, fill="red")
         distance_sum=distance_sum+euclidean_distance(door_and_corner[PATH[i]],door_and_corner[PATH[i+1]])
-
+    print(dijsktra(graph, room_door[start_room], room_door[dest_room]))
     message = tkinter.Message(window, text="FROM : "+start_room + " TO : " +dest_room, width=400, relief="solid")
     message1 = tkinter.Message(window, text="Sum of Length : " + str(distance_sum), width=400, relief="solid")
     message.pack()
@@ -161,7 +162,6 @@ def processOK():
 
 
 def visibility():
-
     line_segment=[]
     for i in total_line:
         for j in range(int(len(i)/2)-1):
@@ -182,7 +182,7 @@ def visibility():
             B2 = (C1[0] - B1[0], C1[1] - B1[1])
             # print(angle_between(A2, B2))
             if(angle_between(A2, B2)<180):
-                # canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
+                canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
                 corner_accord["CORNER"+str(corner_count)]=(B1[0], B1[1])
                 door_and_corner["CORNER"+str(corner_count)]=(B1[0], B1[1])
                 corner_count+=1
@@ -198,7 +198,12 @@ def visibility():
             if intersect(Door_A,Door_B,Line_A,Line_B)==True:
                 cnt+=1
                 test.append((Door_A,Door_B,Line_A,Line_B))
-        if cnt<3:
+        if cnt<3 :
+
+            # if cnt==2 and i[0].find('B')!=-1 and i[1].find('CORNER')!=-1:
+            #     continue
+
+            # print(i)
             # canvas.create_line(Door_A.x, Door_A.y, Door_B.x, Door_B.y, width=2, fill="red")
             temp_A=(Door_A.x,Door_A.y)
             temp_B=(Door_B.x,Door_B.y)
@@ -245,7 +250,6 @@ def main():
     btn = Button(window, text="Calculate", command=processOK,bg='yellow')
     canvas.bind("<Button-1>", click)
 
-
     for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpace"):
         CS_gml_id=i.get('{http://www.opengis.net/gml/3.2}id')
         # print(i.find('{http://www.opengis.net/indoorgml/1.0/core}partialboundedBy'))
@@ -281,9 +285,12 @@ def main():
 
     visibility()
 
-
+    #
     # for key, value in cellspace_accord.items():
     #     print(key, value)
+
+    for key, value in door_and_corner.items():
+        print(key, value)
     # print(edges)
     plt.show()
     canvas.pack()
