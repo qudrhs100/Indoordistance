@@ -7,7 +7,6 @@ from math import *
 from collections import defaultdict
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
-
 from tkinter import *
 from PIL import ImageTk, Image
 
@@ -37,6 +36,16 @@ def angle_between(p1, p2):
     ang2 = np.arctan2(*p2[::-1])
     return np.rad2deg((ang1 - ang2) % (2 * np.pi))
 
+def draw_grid():
+    start_x = int(MIN_X)
+    end_x = int(MAX_X)
+    start_y = int(MIN_Y)
+    end_y = int(MAX_Y)
+    for i in range(start_x,end_x,10):
+        for k in range(start_y,end_y,10):
+            print(i,"   ", k)
+            canvas.create_oval(i, k, i,  k, width=3, fill="#ff0000")
+    window.mainloop()
 
 def dijsktra(graph, initial, end):
     # shortest paths is a dict of nodes
@@ -75,13 +84,15 @@ def dijsktra(graph, initial, end):
     path = path[::-1]
     return path
 
-#############################################################################
+###############################################################################
 
 
 
 
-# tree = ET.parse('cellspaceboundary_door.gml')
-tree = ET.parse('complex.gml')
+
+tree = ET.parse('cellspaceboundary_door.gml')
+# tree = ET.parse('victoriaAirport_IndoorGML_v20.xml')
+# tree = ET.parse('complex.gml')
 root = tree.getroot()
 window = tkinter.Tk()
 window.title("Indoor Distance")
@@ -103,13 +114,29 @@ door_and_corner={}##door와 corner(Graph생성에 포함되어야 한는 node)�
 graph = Graph()##최소거리를 계산하기 위한 그래프
 edges = []##그래프의 edges
 
+##
+MIN_X=999999
+MAX_X=-999999
+MIN_Y=999999
+MAX_Y=-999999
+##Grid를 만들기 위한 min x,y
+
 start_room=""
 dest_room=""
+
 
 class Point_make:
     def __init__(self,x,y):
         self.x = x
         self.y = y
+
+def calc_min_max(POINT):
+    global MIN_X,MAX_X,MIN_Y,MAX_Y
+    # print(POINT[0],"    ",POINT[1])
+    MIN_X=min(POINT[0],MIN_X)
+    MAX_X=max(POINT[0],MAX_X)
+    MIN_Y=min(POINT[1],MIN_Y)
+    MAX_Y=max(POINT[1],MAX_Y)
 
 def angle_between(p1, p2):
     ang1 = np.arctan2(*p1[::-1])
@@ -127,6 +154,8 @@ def intersect(A,B,C,D):
 
 def calculate_path():
     print("Caculatepath")
+
+
 
 
 def processOK():
@@ -178,6 +207,7 @@ def visibility():
             A1 = (float(total_line[i[0]][j]),float(total_line[i[0]][j+1]))
             B1 = (float(total_line[i[0]][j+2]), float(total_line[i[0]][j + 3]))
             C1 = (float(total_line[i[0]][j+4]), float(total_line[i[0]][j + 5]))
+            calc_min_max(A1)
             A2= (B1[0]-A1[0],B1[1]-A1[1])
             B2 = (C1[0] - B1[0], C1[1] - B1[1])
             # print(angle_between(A2, B2))
@@ -199,10 +229,8 @@ def visibility():
                 cnt+=1
                 test.append((Door_A,Door_B,Line_A,Line_B))
         if cnt<3 :
-
             # if cnt==2 and i[0].find('B')!=-1 and i[1].find('CORNER')!=-1:
             #     continue
-
             # print(i)
             # canvas.create_line(Door_A.x, Door_A.y, Door_B.x, Door_B.y, width=2, fill="red")
             temp_A=(Door_A.x,Door_A.y)
@@ -242,7 +270,7 @@ def click(event):
 
     print("Button click", event.x, event.y)
     # print (total_click)
-    canvas.create_oval(event.x, event.y, event.x,  event.y, width=5, fill="#ff0000")
+    canvas.create_oval(event.x, event.y, event.x,  event.y, width=5, outline="red")
     window.mainloop()
 
 
@@ -289,12 +317,13 @@ def main():
     # for key, value in cellspace_accord.items():
     #     print(key, value)
 
-    for key, value in door_and_corner.items():
-        print(key, value)
+    # for key, value in door_and_corner.items():
+    #     print(key, value)
     # print(edges)
     plt.show()
     canvas.pack()
     btn.pack()
+    draw_grid()
     window.mainloop()
 
 if __name__ == "__main__":
