@@ -97,8 +97,9 @@ tree = ET.parse('data/313-4F-2D-190612.gml')
 # tree = ET.parse('complex.gml')
 root = tree.getroot()
 window = tkinter.Tk()
+
 window.title("Indoor Distance")
-canvas = tkinter.Canvas(window, width=2000, height=2000)
+canvas = tkinter.Canvas(window, width=1000, height=500)
 img = ImageTk.PhotoImage(Image.open("Door.png"))
 
 total_click = 0
@@ -150,11 +151,6 @@ def angle_between(p1, p2):
 def euclidean_distance(x,y):
     return sqrt(sum(pow(a-b,2) for a, b in zip(x, y)))
 
-# def ccw(A,B,C):
-#     return ((C.y-A.y) * (B.x-A.x) > (B.y-A.y) * (C.x-A.x))
-#
-# def intersect(A,B,C,D):
-#     return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
 
 def calculate_path():
     print("Caculatepath")
@@ -191,6 +187,7 @@ def processOK():
 
     message = tkinter.Message(window, text="FROM : "+start_room + " TO : " +dest_room, width=400, relief="solid")
     message1 = tkinter.Message(window, text="Sum of Length : " + str(distance_sum), width=400, relief="solid")
+    message2 = tkinter.Message(window, text="# of Turns  : " + str(distance_sum), width=400, relief="solid")
     message.pack()
     message1.pack()
 
@@ -251,15 +248,11 @@ def visibility():
                 test.append((Door_A,Door_B,Line_A,Line_B))
 
         if cnt==0 :
-            # print("not inetrsect")
-            # if cnt==2 and i[0].find('B')!=-1 and i[1].find('CORNER')!=-1:
-            #     continue
-            # print(i)
             # canvas.create_line(Door_A.x, Door_A.y, Door_B.x, Door_B.y, width=2, fill="red")
             temp_A=(Door_A.x,Door_A.y)
             temp_B=(Door_B.x,Door_B.y)
             edges.append((i[0],i[1],euclidean_distance(temp_A,temp_B)))
-            # edges.append((i[1], i[0], euclidean_distance(temp_A, temp_B)))
+
 
 
 
@@ -299,23 +292,23 @@ def click(event):
 
 
 def main():
+    scale_x=2
+    scale_y=1
     btn = Button(window, text="Calculate", command=processOK,bg='yellow')
     canvas.bind("<Button-1>", click)
 
     for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpace"):
         CS_gml_id=i.get('{http://www.opengis.net/gml/3.2}id')
         CS_name =i.find('{http://www.opengis.net/gml/3.2}name').text
-        # print(CS_gml_id)
-        # print(i.find('{http://www.opengis.net/indoorgml/1.0/core}partialboundedBy'))
         if i.find('{http://www.opengis.net/indoorgml/1.0/core}partialboundedBy')!=None:
             room_door[CS_gml_id]=i.find('{http://www.opengis.net/indoorgml/1.0/core}partialboundedBy').get('{http://www.w3.org/1999/xlink}href')[1:]
         list=[]
         list_set=[]
         for j in i.findall("./{http://www.opengis.net/indoorgml/1.0/core}cellSpaceGeometry/{http://www.opengis.net/indoorgml/1.0/core}Geometry2D/{http://www.opengis.net/gml/3.2}Polygon/{http://www.opengis.net/gml/3.2}exterior/{http://www.opengis.net/gml/3.2}LinearRing/{http://www.opengis.net/gml/3.2}pos"):
             words=j.text.split()
-            list.append(str(float(words[0])))
-            list.append(str(float(words[1])))
-            input = (float(words[0]),float(words[1]))
+            list.append(str(float(words[0])*scale_x))
+            list.append(str(float(words[1])*scale_y))
+            input = (float(words[0])*scale_x,float(words[1])*scale_y)
             list_set.append(input)
         canvas.create_polygon(list, outline='black', fill='ivory3', width=2)
         # print(list)
@@ -331,34 +324,22 @@ def main():
         if gml_id.find("REVERSE")!= -1 : continue ##Reverse가 들어가 있을 경우 continue
         sum_x = 0
         sum_y = 0
+        DOOR=[]
         for j in i.findall("{http://www.opengis.net/indoorgml/1.0/core}cellSpaceBoundaryGeometry/{http://www.opengis.net/indoorgml/1.0/core}geometry2D/{http://www.opengis.net/gml/3.2}LineString/{http://www.opengis.net/gml/3.2}pos"):
             words=j.text.split()
-            sum_x+=float(words[0])
-            sum_y+=float(words[1])
-        # canvas.create_image(sum_x/2-15, sum_y/2-15, image=img, anchor=NW)
-        # canvas.create_oval(sum_x/2, sum_y/2,sum_x/2, sum_y/2,  width=8, outline="blue")
+            DOOR.append([float(words[0])*scale_x,float(words[1])*scale_y])
+            sum_x+=float(words[0])*scale_x
+            sum_y+=float(words[1])*scale_y
         total_door.append((sum_x/2,sum_y/2))
         door_accord[gml_id]=(sum_x/2,sum_y/2)
+        canvas.create_line(DOOR[0][0], DOOR[0][1], DOOR[1][0], DOOR[1][1], width=5, fill="blue")
         door_and_corner[gml_id] = (sum_x/2,sum_y/2)
 
     for key,value in room_door.items():
         if(value.find("-REVERSE")!=-1):
             room_door[key]=value[0:value.find("-REVERSE")]
 
-    # print(room_door)
-    # print(door_accord)
-
-
     visibility()
-    # print(door_and_corner)
-    # print(graph.edges.items())
-    #
-    # for key, value in cellspace_accord.items():
-    #     print(key, value)
-
-    # for key, value in door_and_corner.items():
-    #     print(key, value)
-
     plt.show()
     canvas.pack()
     btn.pack()
