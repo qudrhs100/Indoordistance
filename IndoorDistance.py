@@ -7,6 +7,7 @@ from math import *
 from collections import defaultdict
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
+from shapely.geometry import LineString
 from tkinter import *
 from PIL import ImageTk, Image
 
@@ -90,14 +91,14 @@ def dijsktra(graph, initial, end):
 
 
 
-# tree = ET.parse('data/313-4F-2D-190612.gml')
-tree = ET.parse('cellspaceboundary_door.gml')
+tree = ET.parse('data/313-4F-2D-190612.gml')
+# tree = ET.parse('cellspaceboundary_door.gml')
 # tree = ET.parse('victoriaAirport_IndoorGML_v20.xml')
 # tree = ET.parse('complex.gml')
 root = tree.getroot()
 window = tkinter.Tk()
 window.title("Indoor Distance")
-canvas = tkinter.Canvas(window, width=500, height=500)
+canvas = tkinter.Canvas(window, width=2000, height=2000)
 img = ImageTk.PhotoImage(Image.open("Door.png"))
 
 total_click = 0
@@ -149,11 +150,11 @@ def angle_between(p1, p2):
 def euclidean_distance(x,y):
     return sqrt(sum(pow(a-b,2) for a, b in zip(x, y)))
 
-def ccw(A,B,C):
-    return (C.y-A.y) * (B.x-A.x) > (B.y-A.y) * (C.x-A.x)
-
-def intersect(A,B,C,D):
-    return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
+# def ccw(A,B,C):
+#     return ((C.y-A.y) * (B.x-A.x) > (B.y-A.y) * (C.x-A.x))
+#
+# def intersect(A,B,C,D):
+#     return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
 
 def calculate_path():
     print("Caculatepath")
@@ -179,8 +180,8 @@ def processOK():
 
     # print(dijsktra(graph, room_door[start_room], room_door[dest_room]))
     PATH=dijsktra(graph, room_door[start_room], room_door[dest_room])
-    print(start_room,dest_room)
-    print(edges)
+    # print(start_room,dest_room)
+    # print(edges)
     for i,v in enumerate(PATH):
         if i>len(dijsktra(graph, room_door[start_room], room_door[dest_room]))-2:continue
 
@@ -199,10 +200,11 @@ def processOK():
 def visibility():
     line_segment=[]
     for i in total_line:
+        # print(i)
         for j in range(int(len(i)/2)-1):
             line_segment.append(((i[j*2],i[j*2+1]),(i[j*2+2],i[j*2+3])))
 
-    print(line_segment)
+    # print(line_segment)
     corner_count=0
     for i in enumerate(corridor_line):
         temp=i[1]
@@ -219,23 +221,37 @@ def visibility():
             B2 = (C1[0] - B1[0], C1[1] - B1[1])
             # print(angle_between(A2, B2))
             if(angle_between(A2, B2)<180):
-                canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
+                # canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
                 corner_accord["CORNER"+str(corner_count)]=(B1[0], B1[1])
                 door_and_corner["CORNER"+str(corner_count)]=(B1[0], B1[1])
                 corner_count+=1
-
+    # print(door_and_corner)
     for i in list(itertools.combinations(door_and_corner, 2)):
         test=[]
         Door_A = Point_make(float(door_and_corner[i[0]][0]),float(door_and_corner[i[0]][1]))
         Door_B = Point_make(float(door_and_corner[i[1]][0]),float(door_and_corner[i[1]][1]))
+
+        DOOR_LINE=LineString([(Door_A.x,Door_A.y),(Door_B.x,Door_B.y)])
+        # print(DOOR_LINE)
         cnt =0
         for j in line_segment:
             Line_A = Point_make(float(j[0][0]),float(j[0][1]))
             Line_B = Point_make(float(j[1][0]),float(j[1][1]))
-            if intersect(Door_A,Door_B,Line_A,Line_B)==True:
+            WALL_LINE=LineString([(Line_A.x,Line_A.y),(Line_B.x,Line_B.y)])
+            # print(DOOR_LINE.intersection(WALL_LINE).type)
+
+
+            if DOOR_LINE.intersection(WALL_LINE).type=='Point':
+                temp_A = (DOOR_LINE.intersection(WALL_LINE).x, DOOR_LINE.intersection(WALL_LINE).y)
+                temp_B = (Door_A.x, Door_A.y)
+                temp_C = (Door_B.x, Door_B.y)
+                if euclidean_distance(temp_A,temp_B)<1 or euclidean_distance(temp_A,temp_C)<1:continue
+                # print(euclidean_distance(temp_A,temp_B))
                 cnt+=1
                 test.append((Door_A,Door_B,Line_A,Line_B))
+
         if cnt==0 :
+            # print("not inetrsect")
             # if cnt==2 and i[0].find('B')!=-1 and i[1].find('CORNER')!=-1:
             #     continue
             # print(i)
@@ -320,7 +336,7 @@ def main():
             sum_x+=float(words[0])
             sum_y+=float(words[1])
         # canvas.create_image(sum_x/2-15, sum_y/2-15, image=img, anchor=NW)
-        canvas.create_oval(sum_x/2, sum_y/2,sum_x/2, sum_y/2,  width=8, outline="blue")
+        # canvas.create_oval(sum_x/2, sum_y/2,sum_x/2, sum_y/2,  width=8, outline="blue")
         total_door.append((sum_x/2,sum_y/2))
         door_accord[gml_id]=(sum_x/2,sum_y/2)
         door_and_corner[gml_id] = (sum_x/2,sum_y/2)
@@ -329,12 +345,12 @@ def main():
         if(value.find("-REVERSE")!=-1):
             room_door[key]=value[0:value.find("-REVERSE")]
 
-    print(room_door)
-    print(door_accord)
+    # print(room_door)
+    # print(door_accord)
 
 
     visibility()
-    print(door_and_corner)
+    # print(door_and_corner)
     # print(graph.edges.items())
     #
     # for key, value in cellspace_accord.items():
