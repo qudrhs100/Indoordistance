@@ -90,6 +90,7 @@ def dijsktra(graph, initial, end):
 
 
 
+# tree = ET.parse('data/313-4F-2D-190612.gml')
 tree = ET.parse('cellspaceboundary_door.gml')
 # tree = ET.parse('victoriaAirport_IndoorGML_v20.xml')
 # tree = ET.parse('complex.gml')
@@ -98,8 +99,10 @@ window = tkinter.Tk()
 window.title("Indoor Distance")
 canvas = tkinter.Canvas(window, width=500, height=500)
 img = ImageTk.PhotoImage(Image.open("Door.png"))
+
 total_click = 0
 total_line=[]
+corridor_line=[]
 total_door=[]
 start_coord=()
 dest_coord=()
@@ -164,7 +167,7 @@ def processOK():
     print(start_coord, "    ",dest_coord)
     for edge in edges:
         graph.add_edge(*edge)
-    # print("FROM : ",start_room," TO : " ,dest_room)
+
 
     distance_sum=0
 
@@ -176,12 +179,15 @@ def processOK():
 
     # print(dijsktra(graph, room_door[start_room], room_door[dest_room]))
     PATH=dijsktra(graph, room_door[start_room], room_door[dest_room])
+    print(start_room,dest_room)
+    print(edges)
     for i,v in enumerate(PATH):
         if i>len(dijsktra(graph, room_door[start_room], room_door[dest_room]))-2:continue
+
         canvas.create_line(door_and_corner[PATH[i]][0], door_and_corner[PATH[i]][1], door_and_corner[PATH[i+1]][0],
                            door_and_corner[PATH[i + 1]][1], width=2, fill="red")
         distance_sum=distance_sum+euclidean_distance(door_and_corner[PATH[i]],door_and_corner[PATH[i+1]])
-    print(dijsktra(graph, room_door[start_room], room_door[dest_room]))
+
     message = tkinter.Message(window, text="FROM : "+start_room + " TO : " +dest_room, width=400, relief="solid")
     message1 = tkinter.Message(window, text="Sum of Length : " + str(distance_sum), width=400, relief="solid")
     message.pack()
@@ -196,17 +202,18 @@ def visibility():
         for j in range(int(len(i)/2)-1):
             line_segment.append(((i[j*2],i[j*2+1]),(i[j*2+2],i[j*2+3])))
 
+    print(line_segment)
     corner_count=0
-    for i in enumerate(total_line):
+    for i in enumerate(corridor_line):
         temp=i[1]
         temp.append(i[1][2])
         temp.append(i[1][3])
         for j in range(len(temp)):
             if j%2==1:continue
             if j+6>len(i[1]):continue
-            A1 = (float(total_line[i[0]][j]),float(total_line[i[0]][j+1]))
-            B1 = (float(total_line[i[0]][j+2]), float(total_line[i[0]][j + 3]))
-            C1 = (float(total_line[i[0]][j+4]), float(total_line[i[0]][j + 5]))
+            A1 = (float(corridor_line[i[0]][j]),float(corridor_line[i[0]][j+1]))
+            B1 = (float(corridor_line[i[0]][j+2]), float(corridor_line[i[0]][j + 3]))
+            C1 = (float(corridor_line[i[0]][j+4]), float(corridor_line[i[0]][j + 5]))
             calc_min_max(A1)
             A2= (B1[0]-A1[0],B1[1]-A1[1])
             B2 = (C1[0] - B1[0], C1[1] - B1[1])
@@ -228,7 +235,7 @@ def visibility():
             if intersect(Door_A,Door_B,Line_A,Line_B)==True:
                 cnt+=1
                 test.append((Door_A,Door_B,Line_A,Line_B))
-        if cnt<3 :
+        if cnt==0 :
             # if cnt==2 and i[0].find('B')!=-1 and i[1].find('CORNER')!=-1:
             #     continue
             # print(i)
@@ -236,6 +243,7 @@ def visibility():
             temp_A=(Door_A.x,Door_A.y)
             temp_B=(Door_B.x,Door_B.y)
             edges.append((i[0],i[1],euclidean_distance(temp_A,temp_B)))
+            # edges.append((i[1], i[0], euclidean_distance(temp_A, temp_B)))
 
 
 
@@ -280,6 +288,8 @@ def main():
 
     for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpace"):
         CS_gml_id=i.get('{http://www.opengis.net/gml/3.2}id')
+        CS_name =i.find('{http://www.opengis.net/gml/3.2}name').text
+        # print(CS_gml_id)
         # print(i.find('{http://www.opengis.net/indoorgml/1.0/core}partialboundedBy'))
         if i.find('{http://www.opengis.net/indoorgml/1.0/core}partialboundedBy')!=None:
             room_door[CS_gml_id]=i.find('{http://www.opengis.net/indoorgml/1.0/core}partialboundedBy').get('{http://www.w3.org/1999/xlink}href')[1:]
@@ -292,7 +302,11 @@ def main():
             input = (float(words[0]),float(words[1]))
             list_set.append(input)
         canvas.create_polygon(list, outline='black', fill='ivory3', width=2)
-        total_line.append(list)
+        # print(list)
+        if CS_name.find("Corridor")!=-1:
+            corridor_line.append(list)
+        else:
+            total_line.append(list)
         cellspace_accord[CS_gml_id]=list_set
 
 
@@ -305,25 +319,34 @@ def main():
             words=j.text.split()
             sum_x+=float(words[0])
             sum_y+=float(words[1])
-        canvas.create_image(sum_x/2-15, sum_y/2-15, image=img, anchor=NW)
+        # canvas.create_image(sum_x/2-15, sum_y/2-15, image=img, anchor=NW)
+        canvas.create_oval(sum_x/2, sum_y/2,sum_x/2, sum_y/2,  width=8, outline="blue")
         total_door.append((sum_x/2,sum_y/2))
         door_accord[gml_id]=(sum_x/2,sum_y/2)
         door_and_corner[gml_id] = (sum_x/2,sum_y/2)
 
+    for key,value in room_door.items():
+        if(value.find("-REVERSE")!=-1):
+            room_door[key]=value[0:value.find("-REVERSE")]
+
+    print(room_door)
+    print(door_accord)
+
 
     visibility()
-
+    print(door_and_corner)
+    # print(graph.edges.items())
     #
     # for key, value in cellspace_accord.items():
     #     print(key, value)
 
     # for key, value in door_and_corner.items():
     #     print(key, value)
-    # print(edges)
+
     plt.show()
     canvas.pack()
     btn.pack()
-    draw_grid()
+    # draw_grid()
     window.mainloop()
 
 if __name__ == "__main__":
