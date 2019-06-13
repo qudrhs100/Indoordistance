@@ -22,6 +22,8 @@ class Graph():
         with the two nodes as a tuple as the key
         e.g. {('X', 'A'): 7, ('X', 'B'): 2, ...}
         """
+        self.edges = defaultdict(list)
+        self.weights = {}
 
 
     def add_edge(self, from_node, to_node, weight):
@@ -30,6 +32,46 @@ class Graph():
         self.edges[to_node].append(from_node)
         self.weights[(from_node, to_node)] = weight
         self.weights[(to_node, from_node)] = weight
+tree = ET.parse('data/313-4F-2D-190612.gml')
+# tree = ET.parse('cellspaceboundary_door.gml')
+# tree = ET.parse('victoriaAirport_IndoorGML_v20.xml')
+# tree = ET.parse('complex.gml')
+root = tree.getroot()
+window = tkinter.Tk()
+
+window.title("Indoor Distance")
+canvas = tkinter.Canvas(window, width=1000, height=500)
+img = ImageTk.PhotoImage(Image.open("Door.png"))
+
+total_click = 0
+total_line=[]
+corridor_line=[]
+door_line=[]
+total_door=[]
+start_coord=()
+dest_coord=()
+room_door={}##Room<->Door duality 관계확인
+
+cellspace_accord={}##cellspace 와 각각의 좌표
+
+
+door_accord={}##door들과 각각의 좌표값
+corner_accord={}##coner들과 각각의 좌표값
+grid_accord={}##grid_point들 각각의 좌표값
+door_and_corner={}##door와 corner(Graph생성에 포함되어야 한는 node)들과 그의 좌표
+
+graph = Graph()##최소거리를 계산하기 위한 그래프
+edges = []##그래프의 edges
+
+##
+MIN_X=999999
+MAX_X=-999999
+MIN_Y=999999
+MAX_Y=-999999
+##Grid를 만들기 위한 min x,y
+
+start_room=""
+dest_room=""
 
 def angle_between(p1, p2):
     ang1 = np.arctan2(*p1[::-1])
@@ -37,6 +79,8 @@ def angle_between(p1, p2):
     return np.rad2deg((ang1 - ang2) % (2 * np.pi))
 
 def draw_grid():
+    global edges
+    global grid_accord
     total_line_segment=[]
     for i in total_line:
         for j in range(int(len(i)/2)-1):
@@ -48,7 +92,6 @@ def draw_grid():
     start_y = int(MIN_Y)
     end_y = int(MAX_Y)
     interval = 10
-    grid_count = 0
     grid_line = []
     for i in range(start_x,end_x,interval):
         for k in range(start_y,end_y,interval):
@@ -61,15 +104,23 @@ def draw_grid():
                     break
             if CONTAIN==False : continue
             if i > end_x or i < 0 or k > end_y or k < 0: continue
+            grid_accord[str(int(i))+"-"+str(int(k))]=(i,k)
             grid_line.append(LineString([(i, k), (i + interval, k + interval)]))
             grid_line.append(LineString([(i, k), (i + interval, k)]))
             grid_line.append(LineString([(i, k), (i, k + interval)]))
-            canvas.create_oval(i, k, i,  k, width=3, fill="#ff0000")
+            # canvas.create_oval(i, k, i,  k, width=3, fill="#ff0000")
+            # print(i , k)
 
 
     for i in grid_line :
         WALL_Bool_intersect=False
         DOOR_Bool_intersect=False
+        Start_grid=str(int(list(i.coords)[0][0]))+"-"+str(int(list(i.coords)[0][1]))
+        End_grid=str(int(list(i.coords)[1][0]))+"-"+ str(int(list(i.coords)[1][1]))
+        EDGE=(Start_grid,End_grid,euclidean_distance((list(i.coords)[0][0], list(i.coords)[0][1]),(list(i.coords)[1][0], list(i.coords)[1][1])))
+
+        # print(list(i.coords)[0][0], list(i.coords)[0][1], list(i.coords)[1][0], list(i.coords)[1][1])
+        # print(EDGE)
         for k in total_line_segment:
             WALL_LINE=LineString([(k[0][0],k[0][1]),(k[1][0],k[1][1])])
             intersect_Point=i.intersection(WALL_LINE)
@@ -78,7 +129,8 @@ def draw_grid():
                 break
 
         if WALL_Bool_intersect==False:
-            canvas.create_line(list(i.coords)[0][0], list(i.coords)[0][1], list(i.coords)[1][0], list(i.coords)[1][1],width=1, fill="blue")
+            # canvas.create_line(list(i.coords)[0][0], list(i.coords)[0][1], list(i.coords)[1][0], list(i.coords)[1][1],width=1, fill="blue")
+            edges.append(EDGE)
 
         for k in door_line:
             intersect_Point = i.intersection(k)
@@ -87,12 +139,14 @@ def draw_grid():
                 break
 
         if DOOR_Bool_intersect == True:
-            canvas.create_line(list(i.coords)[0][0], list(i.coords)[0][1], list(i.coords)[1][0], list(i.coords)[1][1],width=1, fill="red")
+            # canvas.create_line(list(i.coords)[0][0], list(i.coords)[0][1], list(i.coords)[1][0], list(i.coords)[1][1],width=1, fill="red")
+            edges.append(EDGE)
 
 
             # print (i)
     # for i in grid_line:
     #     print (list(i.coords)[0][0])
+
     window.mainloop()
 
 def dijsktra(graph, initial, end):
@@ -134,51 +188,6 @@ def dijsktra(graph, initial, end):
 
 ###############################################################################
 
-
-
-
-
-tree = ET.parse('data/313-4F-2D-190612.gml')
-# tree = ET.parse('cellspaceboundary_door.gml')
-# tree = ET.parse('victoriaAirport_IndoorGML_v20.xml')
-# tree = ET.parse('complex.gml')
-root = tree.getroot()
-window = tkinter.Tk()
-
-window.title("Indoor Distance")
-canvas = tkinter.Canvas(window, width=1000, height=500)
-img = ImageTk.PhotoImage(Image.open("Door.png"))
-
-total_click = 0
-total_line=[]
-corridor_line=[]
-door_line=[]
-total_door=[]
-start_coord=()
-dest_coord=()
-room_door={}##Room<->Door duality 관계확인
-
-cellspace_accord={}##cellspace 와 각각의 좌표
-
-
-door_accord={}##door들과 각각의 좌표값
-corner_accord={}##coner들과 각각의 좌표값
-door_and_corner={}##door와 corner(Graph생성에 포함되어야 한는 node)들과 그의 좌표
-
-graph = Graph()##최소거리를 계산하기 위한 그래프
-edges = []##그래프의 edges
-
-##
-MIN_X=999999
-MAX_X=-999999
-MIN_Y=999999
-MAX_Y=-999999
-##Grid를 만들기 위한 min x,y
-
-start_room=""
-dest_room=""
-
-
 class Point_make:
     def __init__(self,x,y):
         self.x = x
@@ -209,35 +218,26 @@ def calculate_path():
 
 def processOK():
     global edges
+    global start_coord
+    global dest_coord
     print("Caculate button is clicked")
-    print(start_coord, "    ",dest_coord)
+    # print(edges)
     for edge in edges:
         graph.add_edge(*edge)
 
 
     distance_sum=0
 
-    canvas.create_line(start_coord[0],start_coord[1], door_accord[room_door[start_room]][0], door_accord[room_door[start_room]][1], width=2, fill="red")
-    distance_sum=distance_sum+euclidean_distance(start_coord,door_accord[room_door[start_room]])
 
-    canvas.create_line(dest_coord[0], dest_coord[1], door_accord[room_door[dest_room]][0], door_accord[room_door[dest_room]][1], width=2, fill="red")
-    distance_sum = distance_sum + euclidean_distance(dest_coord, door_accord[room_door[dest_room]])
-
-    # print(dijsktra(graph, room_door[start_room], room_door[dest_room]))
-    PATH=dijsktra(graph, room_door[start_room], room_door[dest_room])
-    # print(start_room,dest_room)
-    # print(edges)
+    PATH=dijsktra(graph,start_coord ,dest_coord)
+    # print(PATH)
     for i,v in enumerate(PATH):
-        if i>len(dijsktra(graph, room_door[start_room], room_door[dest_room]))-2:continue
-
-        canvas.create_line(door_and_corner[PATH[i]][0], door_and_corner[PATH[i]][1], door_and_corner[PATH[i+1]][0],
-                           door_and_corner[PATH[i + 1]][1], width=2, fill="red")
-        distance_sum=distance_sum+euclidean_distance(door_and_corner[PATH[i]],door_and_corner[PATH[i+1]])
-
-    message = tkinter.Message(window, text="FROM : "+start_room + " TO : " +dest_room, width=400, relief="solid")
+        if i>len(PATH)-2:continue
+        canvas.create_line(grid_accord[PATH[i]][0], grid_accord[PATH[i]][1], grid_accord[PATH[i+1]][0],
+                           grid_accord[PATH[i + 1]][1], width=2, fill="red")
+        distance_sum=distance_sum+euclidean_distance(grid_accord[PATH[i]],grid_accord[PATH[i+1]])
     message1 = tkinter.Message(window, text="Sum of Length : " + str(distance_sum), width=400, relief="solid")
     message2 = tkinter.Message(window, text="# of Turns  : " + str(distance_sum), width=400, relief="solid")
-    message.pack()
     message1.pack()
     message2.pack()
 
@@ -246,26 +246,23 @@ def click(event):
     global total_click
     global start_coord
     global dest_coord
-    global start_room
-    global dest_room
     total_click=total_click+1
+    min_distance=99999
     if total_click>2:
         return
     if total_click==1:
-        for key, value in cellspace_accord.items():
-            point = Point(event.x, event.y)
-            start_coord=(event.x, event.y)
-            polygon=Polygon(value)
-            if polygon.contains(point)==True:
-                start_room=key
+        for key,value in grid_accord.items():
+            if euclidean_distance(value,(event.x,event.y))<min_distance:
+                min_distance=euclidean_distance(value,(event.x,event.y))
+                start_coord=key
 
     if total_click==2:
-        for key, value in cellspace_accord.items():
-            point = Point(event.x, event.y)
-            dest_coord=(event.x, event.y)
-            polygon = Polygon(value)
-            if polygon.contains(point)==True:
-                dest_room=key
+        for key,value in grid_accord.items():
+            if euclidean_distance(value,(event.x,event.y))<min_distance:
+                min_distance = euclidean_distance(value, (event.x, event.y))
+                dest_coord=key
+
+    # print (start_coord, dest_coord)
 
 
 
@@ -330,11 +327,11 @@ def main():
             room_door[key]=value[0:value.find("-REVERSE")]
 
     # visibility()
+
     plt.show()
     canvas.pack()
     btn.pack()
     draw_grid()
-
     window.mainloop()
 
 if __name__ == "__main__":
