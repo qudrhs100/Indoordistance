@@ -37,15 +37,62 @@ def angle_between(p1, p2):
     return np.rad2deg((ang1 - ang2) % (2 * np.pi))
 
 def draw_grid():
+    total_line_segment=[]
+    for i in total_line:
+        for j in range(int(len(i)/2)-1):
+            total_line_segment.append(((float(i[j*2]),float(i[j*2+1])),(float(i[j*2+2]),float(i[j*2+3]))))
+
+
     start_x = int(MIN_X)
     end_x = int(MAX_X)
     start_y = int(MIN_Y)
     end_y = int(MAX_Y)
-    grid_count=0
-    for i in range(start_x,end_x,10):
-        for k in range(start_y,end_y,10):
-
+    interval = 10
+    grid_count = 0
+    grid_line = []
+    for i in range(start_x,end_x,interval):
+        for k in range(start_y,end_y,interval):
+            CONTAIN=False
+            for key, value in cellspace_accord.items():
+                point = Point(i,k)
+                polygon = Polygon(value)
+                if polygon.contains(point) == True:
+                    CONTAIN=True
+                    break
+            if CONTAIN==False : continue
+            if i > end_x or i < 0 or k > end_y or k < 0: continue
+            grid_line.append(LineString([(i, k), (i + interval, k + interval)]))
+            grid_line.append(LineString([(i, k), (i + interval, k)]))
+            grid_line.append(LineString([(i, k), (i, k + interval)]))
             canvas.create_oval(i, k, i,  k, width=3, fill="#ff0000")
+
+
+    for i in grid_line :
+        WALL_Bool_intersect=False
+        DOOR_Bool_intersect=False
+        for k in total_line_segment:
+            WALL_LINE=LineString([(k[0][0],k[0][1]),(k[1][0],k[1][1])])
+            intersect_Point=i.intersection(WALL_LINE)
+            if intersect_Point.type=='Point':
+                WALL_Bool_intersect=True
+                break
+
+        if WALL_Bool_intersect==False:
+            canvas.create_line(list(i.coords)[0][0], list(i.coords)[0][1], list(i.coords)[1][0], list(i.coords)[1][1],width=1, fill="blue")
+
+        for k in door_line:
+            intersect_Point = i.intersection(k)
+            if intersect_Point.type == 'Point':
+                DOOR_Bool_intersect = True
+                break
+
+        if DOOR_Bool_intersect == True:
+            canvas.create_line(list(i.coords)[0][0], list(i.coords)[0][1], list(i.coords)[1][0], list(i.coords)[1][1],width=1, fill="red")
+
+
+            # print (i)
+    # for i in grid_line:
+    #     print (list(i.coords)[0][0])
     window.mainloop()
 
 def dijsktra(graph, initial, end):
@@ -105,12 +152,14 @@ img = ImageTk.PhotoImage(Image.open("Door.png"))
 total_click = 0
 total_line=[]
 corridor_line=[]
+door_line=[]
 total_door=[]
 start_coord=()
 dest_coord=()
 room_door={}##Room<->Door duality 관계확인
 
 cellspace_accord={}##cellspace 와 각각의 좌표
+
 
 door_accord={}##door들과 각각의 좌표값
 corner_accord={}##coner들과 각각의 좌표값
@@ -193,71 +242,6 @@ def processOK():
     message2.pack()
 
 
-
-
-def visibility():
-    line_segment=[]
-    for i in total_line:
-        # print(i)
-        for j in range(int(len(i)/2)-1):
-            line_segment.append(((i[j*2],i[j*2+1]),(i[j*2+2],i[j*2+3])))
-
-    # print(line_segment)
-    corner_count=0
-    for i in enumerate(corridor_line):
-        temp=i[1]
-        temp.append(i[1][2])
-        temp.append(i[1][3])
-        for j in range(len(temp)):
-            if j%2==1:continue
-            if j+6>len(i[1]):continue
-            A1 = (float(corridor_line[i[0]][j]),float(corridor_line[i[0]][j+1]))
-            B1 = (float(corridor_line[i[0]][j+2]), float(corridor_line[i[0]][j + 3]))
-            C1 = (float(corridor_line[i[0]][j+4]), float(corridor_line[i[0]][j + 5]))
-            # calc_min_max(A1)
-            A2= (B1[0]-A1[0],B1[1]-A1[1])
-            B2 = (C1[0] - B1[0], C1[1] - B1[1])
-            # print(angle_between(A2, B2))
-            if(angle_between(A2, B2)<180):
-                # canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
-                corner_accord["CORNER"+str(corner_count)]=(B1[0], B1[1])
-                door_and_corner["CORNER"+str(corner_count)]=(B1[0], B1[1])
-                corner_count+=1
-    # print(door_and_corner)
-    for i in list(itertools.combinations(door_and_corner, 2)):
-        test=[]
-        Door_A = Point_make(float(door_and_corner[i[0]][0]),float(door_and_corner[i[0]][1]))
-        Door_B = Point_make(float(door_and_corner[i[1]][0]),float(door_and_corner[i[1]][1]))
-
-        DOOR_LINE=LineString([(Door_A.x,Door_A.y),(Door_B.x,Door_B.y)])
-        # print(DOOR_LINE)
-        cnt =0
-        for j in line_segment:
-            Line_A = Point_make(float(j[0][0]),float(j[0][1]))
-            Line_B = Point_make(float(j[1][0]),float(j[1][1]))
-            WALL_LINE=LineString([(Line_A.x,Line_A.y),(Line_B.x,Line_B.y)])
-            # print(DOOR_LINE.intersection(WALL_LINE).type)
-
-
-            if DOOR_LINE.intersection(WALL_LINE).type=='Point':
-                temp_A = (DOOR_LINE.intersection(WALL_LINE).x, DOOR_LINE.intersection(WALL_LINE).y)
-                temp_B = (Door_A.x, Door_A.y)
-                temp_C = (Door_B.x, Door_B.y)
-                if euclidean_distance(temp_A,temp_B)<1 or euclidean_distance(temp_A,temp_C)<1:continue
-                # print(euclidean_distance(temp_A,temp_B))
-                cnt+=1
-                test.append((Door_A,Door_B,Line_A,Line_B))
-
-        if cnt==0 :
-            # canvas.create_line(Door_A.x, Door_A.y, Door_B.x, Door_B.y, width=2, fill="red")
-            temp_A=(Door_A.x,Door_A.y)
-            temp_B=(Door_B.x,Door_B.y)
-            # edges.append((i[0],i[1],euclidean_distance(temp_A,temp_B)))
-
-
-
-
-
 def click(event):
     global total_click
     global start_coord
@@ -336,7 +320,9 @@ def main():
             sum_y+=float(words[1])*scale_y
         total_door.append((sum_x/2,sum_y/2))
         door_accord[gml_id]=(sum_x/2,sum_y/2)
+        door_line.append(LineString([(DOOR[0][0], DOOR[0][1]),(DOOR[1][0], DOOR[1][1])]))
         canvas.create_line(DOOR[0][0], DOOR[0][1], DOOR[1][0], DOOR[1][1], width=5, fill="blue")
+
         door_and_corner[gml_id] = (sum_x/2,sum_y/2)
 
     for key,value in room_door.items():
@@ -348,6 +334,7 @@ def main():
     canvas.pack()
     btn.pack()
     draw_grid()
+
     window.mainloop()
 
 if __name__ == "__main__":
