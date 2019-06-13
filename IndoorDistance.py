@@ -10,6 +10,8 @@ from shapely.geometry.polygon import Polygon
 from shapely.geometry import LineString
 from tkinter import *
 from PIL import ImageTk, Image
+import sys
+import os
 
 
 
@@ -44,7 +46,6 @@ def draw_grid():
     end_y = int(MAX_Y)
     for i in range(start_x,end_x,10):
         for k in range(start_y,end_y,10):
-            print(i,"   ", k)
             canvas.create_oval(i, k, i,  k, width=3, fill="#ff0000")
     window.mainloop()
 
@@ -104,6 +105,7 @@ img = ImageTk.PhotoImage(Image.open("Door.png"))
 
 total_click = 0
 total_line=[]
+
 corridor_line=[]
 total_door=[]
 start_coord=()
@@ -160,8 +162,10 @@ def calculate_path():
 
 def processOK():
     global edges
+
     print("Caculate button is clicked")
     print(start_coord, "    ",dest_coord)
+    print(edges)
     for edge in edges:
         graph.add_edge(*edge)
 
@@ -174,10 +178,10 @@ def processOK():
     canvas.create_line(dest_coord[0], dest_coord[1], door_accord[room_door[dest_room]][0], door_accord[room_door[dest_room]][1], width=2, fill="red")
     distance_sum = distance_sum + euclidean_distance(dest_coord, door_accord[room_door[dest_room]])
 
-    # print(dijsktra(graph, room_door[start_room], room_door[dest_room]))
+
     PATH=dijsktra(graph, room_door[start_room], room_door[dest_room])
-    # print(start_room,dest_room)
-    # print(edges)
+
+
     for i,v in enumerate(PATH):
         if i>len(dijsktra(graph, room_door[start_room], room_door[dest_room]))-2:continue
 
@@ -187,10 +191,10 @@ def processOK():
 
     message = tkinter.Message(window, text="FROM : "+start_room + " TO : " +dest_room, width=400, relief="solid")
     message1 = tkinter.Message(window, text="Sum of Length : " + str(distance_sum), width=400, relief="solid")
-    message2 = tkinter.Message(window, text="# of Turns  : " + str(distance_sum), width=400, relief="solid")
+    message2 = tkinter.Message(window, text="# of Turns  : " + str(len(PATH)), width=400, relief="solid")
     message.pack()
     message1.pack()
-
+    message2.pack()
 
 
 
@@ -295,6 +299,7 @@ def main():
     scale_x=2
     scale_y=1
     btn = Button(window, text="Calculate", command=processOK,bg='yellow')
+
     canvas.bind("<Button-1>", click)
 
     for i in root.findall("./{http://www.opengis.net/indoorgml/1.0/core}primalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}PrimalSpaceFeatures/{http://www.opengis.net/indoorgml/1.0/core}cellSpaceMember/{http://www.opengis.net/indoorgml/1.0/core}CellSpace"):
