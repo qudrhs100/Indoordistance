@@ -105,7 +105,7 @@ def draw_grid():
             if CONTAIN==False : continue
             if i > end_x or i < 0 or k > end_y or k < 0: continue
             grid_accord[str(int(i))+"-"+str(int(k))]=(i,k)
-            grid_line.append(LineString([(i, k), (i + interval, k + interval)]))
+            grid_line.append(LineString([(i, k), (i - interval, k + interval)]))
             grid_line.append(LineString([(i, k), (i + interval, k)]))
             grid_line.append(LineString([(i, k), (i, k + interval)]))
             # canvas.create_oval(i, k, i,  k, width=3, fill="#ff0000")
@@ -129,7 +129,7 @@ def draw_grid():
                 break
 
         if WALL_Bool_intersect==False:
-            # canvas.create_line(list(i.coords)[0][0], list(i.coords)[0][1], list(i.coords)[1][0], list(i.coords)[1][1],width=1, fill="blue")
+            canvas.create_line(list(i.coords)[0][0], list(i.coords)[0][1], list(i.coords)[1][0], list(i.coords)[1][1],width=1, fill="blue")
             edges.append(EDGE)
 
         for k in door_line:
@@ -139,7 +139,7 @@ def draw_grid():
                 break
 
         if DOOR_Bool_intersect == True:
-            # canvas.create_line(list(i.coords)[0][0], list(i.coords)[0][1], list(i.coords)[1][0], list(i.coords)[1][1],width=1, fill="red")
+            canvas.create_line(list(i.coords)[0][0], list(i.coords)[0][1], list(i.coords)[1][0], list(i.coords)[1][1],width=1, fill="red")
             edges.append(EDGE)
 
 

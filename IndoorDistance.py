@@ -163,8 +163,8 @@ def calculate_path():
 def processOK():
     global edges
 
-    print("Caculate button is clicked")
-    print(start_coord, "    ",dest_coord)
+    # print("Caculate button is clicked")
+    # print(start_coord, "    ",dest_coord)
     print(edges)
     for edge in edges:
         graph.add_edge(*edge)
@@ -180,7 +180,7 @@ def processOK():
 
 
     PATH=dijsktra(graph, room_door[start_room], room_door[dest_room])
-
+    print(room_door[start_room], room_door[dest_room])
 
     for i,v in enumerate(PATH):
         if i>len(dijsktra(graph, room_door[start_room], room_door[dest_room]))-2:continue
@@ -255,7 +255,7 @@ def visibility():
             # canvas.create_line(Door_A.x, Door_A.y, Door_B.x, Door_B.y, width=2, fill="red")
             temp_A=(Door_A.x,Door_A.y)
             temp_B=(Door_B.x,Door_B.y)
-            edges.append((i[0],i[1],euclidean_distance(temp_A,temp_B)))
+            edges.append((i[0],i[1],euclidean_distance(temp_A,temp_B)))##edge name1, edge name2, euclidean_distance
 
 
 
