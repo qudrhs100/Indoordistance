@@ -221,7 +221,8 @@ def visibility():
             A2= (B1[0]-A1[0],B1[1]-A1[1])
             B2 = (C1[0] - B1[0], C1[1] - B1[1])
             # print(angle_between(A2, B2))
-            if(angle_between(A2, B2)<180):
+            if(angle_between(A2, B2)<=180):
+                print(B1[0], B1[1])
                 # canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
                 corner_accord["CORNER"+str(corner_count)]=(B1[0], B1[1])
                 door_and_corner["CORNER"+str(corner_count)]=(B1[0], B1[1])
