@@ -89,9 +89,6 @@ def dijsktra(graph, initial, end):
 ###############################################################################
 
 
-
-
-
 tree = ET.parse('data/313-4F-2D-190612.gml')
 # tree = ET.parse('cellspaceboundary_door.gml')
 # tree = ET.parse('victoriaAirport_IndoorGML_v20.xml')
@@ -257,6 +254,7 @@ def visibility():
             temp_A=(Door_A.x,Door_A.y)
             temp_B=(Door_B.x,Door_B.y)
             edges.append((i[0],i[1],euclidean_distance(temp_A,temp_B)))##edge name1, edge name2, euclidean_distance
+
 
 
 
