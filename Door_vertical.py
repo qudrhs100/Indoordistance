@@ -84,12 +84,15 @@ def draw_vertical():
     SUM=[]
     for i in vertical_line:
         for j in corridor_line:
-            print(i.intersection(j))
-    # for i in vertical_line:
-    #     # print(i)
-    #     vertical_list=list(i.coords)
-    #     SUM.append((vertical_list[0],vertical_list[1]))
-    # print(SUM)
+            # print(i.intersection(j))
+            if i.intersection(j).type=="Point":continue
+            # print(i.intersection(j).type)
+            temp_linestring=LineString(i.intersection(j))
+            little_scale_Linestring = affinity.scale(temp_linestring, xfact=1.3, yfact=1.3)
+            # print(tuple(little_scale_Linestring.coords))
+            SUM.append(tuple(little_scale_Linestring.coords))
+            # for k in little_scale_Linestring.coords:
+            #     print (k)
 
     for i in corridor_line:
         SUM.append(tuple(i.coords))
@@ -97,9 +100,9 @@ def draw_vertical():
     MULT = MultiLineString(SUM)
     borders = unary_union(MULT)
     polygons = polygonize(borders)
-    # for p in polygons:
-    #     # print(list(p.exterior.coords))
-    #     canvas.create_polygon(list(p.exterior.coords), outline='black', fill='ivory3', width=2)
+    for p in polygons:
+        # print(list(p.exterior.coords))
+        canvas.create_polygon(list(p.exterior.coords), outline='black', fill='ivory3', width=2)
     window.mainloop()
 
 def dijsktra(graph, initial, end):
@@ -250,7 +253,7 @@ def main():
         canvas.create_polygon(list, outline='black', fill='ivory3', width=2)
         # print(list)
         if CS_name.find("Corridor")!=-1:
-            print(list_set)
+            # print(list_set)
             corridor_line.append(LineString(list_set))
         else:
             total_line.append(list)
@@ -284,7 +287,7 @@ def main():
 
         Rotate_Linestring = affinity.rotate(DOOR_Linestring,90)##90도 수직 시킨 길이
 
-        Rotate_Linestring = affinity.scale(Rotate_Linestring, xfact = 20, yfact= 20 )#100배씩 해줌 (Door 수직 한거 길이 100배)
+        Rotate_Linestring = affinity.scale(Rotate_Linestring, xfact = 100, yfact= 100)#100배씩 해줌 (Door 수직 한거 길이 100배)
         vertical_line.append(Rotate_Linestring)
         # canvas.create_line(Rotate_Linestring.coords[0][0], Rotate_Linestring.coords[0][1], Rotate_Linestring.coords[1][0], Rotate_Linestring.coords[1][1], width=3, fill="green")
         ##Door에서 vertical 한 line 생성
