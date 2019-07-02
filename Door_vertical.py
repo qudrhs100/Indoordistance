@@ -5,13 +5,13 @@ import itertools
 import numpy as np
 from math import *
 from collections import defaultdict
-from shapely.geometry import Point
+from shapely.geometry import Point,MultiLineString
 from shapely.geometry.polygon import Polygon
 from shapely.geometry import LineString
 from tkinter import *
 from PIL import ImageTk, Image
 import shapely.affinity as affinity
-
+from shapely.ops import linemerge, unary_union, polygonize
 
 class Graph():
     def __init__(self):
@@ -45,7 +45,7 @@ img = ImageTk.PhotoImage(Image.open("Door.png"))
 
 total_click = 0
 total_line=[]
-corridor_line=[]
+corridor_line=[]##Corridor의 cellspace set
 door_line=[]
 total_door=[]
 start_coord=()
@@ -81,10 +81,25 @@ def angle_between(p1, p2):
     return np.rad2deg((ang1 - ang2) % (2 * np.pi))
 
 def draw_vertical():
+    SUM=[]
+    for i in vertical_line:
+        for j in corridor_line:
+            print(i.intersection(j))
+    # for i in vertical_line:
+    #     # print(i)
+    #     vertical_list=list(i.coords)
+    #     SUM.append((vertical_list[0],vertical_list[1]))
+    # print(SUM)
 
-    print(vertical_line)
-    
-
+    for i in corridor_line:
+        SUM.append(tuple(i.coords))
+    # print(corridor_line)
+    MULT = MultiLineString(SUM)
+    borders = unary_union(MULT)
+    polygons = polygonize(borders)
+    # for p in polygons:
+    #     # print(list(p.exterior.coords))
+    #     canvas.create_polygon(list(p.exterior.coords), outline='black', fill='ivory3', width=2)
     window.mainloop()
 
 def dijsktra(graph, initial, end):
@@ -235,7 +250,8 @@ def main():
         canvas.create_polygon(list, outline='black', fill='ivory3', width=2)
         # print(list)
         if CS_name.find("Corridor")!=-1:
-            corridor_line.append(list)
+            print(list_set)
+            corridor_line.append(LineString(list_set))
         else:
             total_line.append(list)
         cellspace_accord[CS_gml_id]=list_set
@@ -256,7 +272,7 @@ def main():
         total_door.append((sum_x/2,sum_y/2))
         door_accord[gml_id]=(sum_x/2,sum_y/2)
         door_line.append(LineString([(DOOR[0][0], DOOR[0][1]),(DOOR[1][0], DOOR[1][1])]))
-        canvas.create_line(DOOR[0][0], DOOR[0][1], DOOR[1][0], DOOR[1][1], width=5, fill="blue")
+        canvas.create_line(DOOR[0][0], DOOR[0][1], DOOR[1][0], DOOR[1][1], width=10, fill="blue")
         ##Door에서 vertical 한 line 생성
 
         DOOR_Linestring = LineString([(DOOR[0][0], DOOR[0][1]),(DOOR[1][0], DOOR[1][1])])##DOOR를 Linestring으로 변환
@@ -267,9 +283,9 @@ def main():
         # print("------------------------------------------------------------------------------------------")
 
         Rotate_Linestring = affinity.rotate(DOOR_Linestring,90)##90도 수직 시킨 길이
-        vertical_line.append(Rotate_Linestring)
-        Rotate_Linestring = affinity.scale(Rotate_Linestring, xfact = 100, yfact= 100 )#100배씩 해줌 (Door 수직 한거 길이 100배)
 
+        Rotate_Linestring = affinity.scale(Rotate_Linestring, xfact = 20, yfact= 20 )#100배씩 해줌 (Door 수직 한거 길이 100배)
+        vertical_line.append(Rotate_Linestring)
         # canvas.create_line(Rotate_Linestring.coords[0][0], Rotate_Linestring.coords[0][1], Rotate_Linestring.coords[1][0], Rotate_Linestring.coords[1][1], width=3, fill="green")
         ##Door에서 vertical 한 line 생성
         door_and_corner[gml_id] = (sum_x/2,sum_y/2)

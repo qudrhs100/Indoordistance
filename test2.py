@@ -11,7 +11,7 @@ POLY = Polygon(poly_coords)
 coords = [((-1, 1), (3, 1)), ((1, 3), (1, -3))]
 
 coords.append(tuple(poly_coords))
-
+print(coords)
 MULT = MultiLineString(coords)
 
 
