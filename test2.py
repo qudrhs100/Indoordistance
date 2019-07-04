@@ -7,11 +7,11 @@ from shapely.ops import linemerge, unary_union, polygonize
 poly_coords=[(0, 0), (2, 0), (2, 2), (0, 2),(0, 0)]
 POLY = Polygon(poly_coords)
 # print (tuple(poly_coords))
-
+print(POLY.centroid)
 coords = [((-1, 1), (3, 1)), ((1, 3), (1, -3))]
 
 coords.append(tuple(poly_coords))
-print(coords)
+# print(coords)
 MULT = MultiLineString(coords)
 
 

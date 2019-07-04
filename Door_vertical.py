@@ -101,8 +101,11 @@ def draw_vertical():
     borders = unary_union(MULT)
     polygons = polygonize(borders)
     for p in polygons:
-        # print(list(p.exterior.coords))
+        # print(list(p.centroid.coords))
+        centroid=list(p.centroid.coords)
+
         canvas.create_polygon(list(p.exterior.coords), outline='black', fill='ivory3', width=2)
+        canvas.create_oval(centroid[0][0], centroid[0][1], centroid[0][0], centroid[0][1], width=5, outline="green")
     window.mainloop()
 
 def dijsktra(graph, initial, end):
