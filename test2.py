@@ -1,6 +1,6 @@
 from shapely import wkt
 from shapely.geometry import multilinestring,MultiLineString,Polygon
-from shapely.ops import linemerge, unary_union, polygonize
+from shapely.ops import linemerge, unary_union, polygonize, Point
 
 
 
