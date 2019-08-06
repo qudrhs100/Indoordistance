@@ -1,25 +1,5 @@
-from shapely import wkt
-from shapely.geometry import multilinestring,MultiLineString,Polygon
-from shapely.ops import linemerge, unary_union, polygonize, Point
-
-
-
-poly_coords=[(0, 0), (2, 0), (2, 2), (0, 2),(0, 0)]
-POLY = Polygon(poly_coords)
-# print (tuple(poly_coords))
-print(POLY.centroid)
-coords = [((-1, 1), (3, 1)), ((1, 3), (1, -3))]
-
-coords.append(tuple(poly_coords))
-# print(coords)
-MULT = MultiLineString(coords)
-
-
-# merged = linemerge([POLY.boundary, list(MULT.coords)])
-
-#
-borders = unary_union(MULT)
-polygons = polygonize(borders)
-for p in polygons:
-    print(p)
-
+from shapely.geometry import Polygon
+from osgeo import ogr
+p1 = Polygon([(0,0), (1,1), (1,0)])
+p2 = Polygon([(0,1), (1,0), (1,1)])
+print(p1.intersects(p2))
