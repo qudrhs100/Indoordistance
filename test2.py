@@ -1,5 +1,9 @@
-from shapely.geometry import Polygon
-from osgeo import ogr
-p1 = Polygon([(0,0), (1,1), (1,0)])
-p2 = Polygon([(0,1), (1,0), (1,1)])
-print(p1.intersects(p2))
+import matplotlib.pyplot as plt
+
+import triangle as tr
+
+face = tr.get_data('corridor')
+t = tr.triangulate(face, 'p')
+
+tr.compare(plt, face, t)
+plt.show()

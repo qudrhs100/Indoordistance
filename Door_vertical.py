@@ -32,10 +32,8 @@ class Graph():
         self.edges[to_node].append(from_node)
         self.weights[(from_node, to_node)] = weight
         self.weights[(to_node, from_node)] = weight
-tree = ET.parse('data/313-4F-2D-190612.gml')
-# tree = ET.parse('cellspaceboundary_door.gml')
-# tree = ET.parse('victoriaAirport_IndoorGML_v20.xml')
-# tree = ET.parse('complex.gml')
+# tree = ET.parse('data/313-4F-2D-190612.gml')
+tree = ET.parse('data/Handmade_313.gml')
 root = tree.getroot()
 window = tkinter.Tk()
 
@@ -82,6 +80,8 @@ def angle_between(p1, p2):
 
 def draw_vertical():
     SUM=[]
+    for i in corridor_line:
+        print(i)
     for i in vertical_line:
         for j in corridor_line:
             # print(i.intersection(j))
@@ -207,6 +207,8 @@ def click(event):
     global dest_coord
     total_click=total_click+1
     min_distance=99999
+    for i in range(1,77):
+        print(i,end=' ')
     if total_click>2:
         return
     if total_click==1:
@@ -233,7 +235,7 @@ def click(event):
 
 
 def main():
-    scale_x=2
+    scale_x=1
     scale_y=1
     btn = Button(window, text="Calculate", command=processOK,bg='yellow')
     canvas.bind("<Button-1>", click)
@@ -247,11 +249,11 @@ def main():
         list_set=[]
         for j in i.findall("./{http://www.opengis.net/indoorgml/1.0/core}cellSpaceGeometry/{http://www.opengis.net/indoorgml/1.0/core}Geometry2D/{http://www.opengis.net/gml/3.2}Polygon/{http://www.opengis.net/gml/3.2}exterior/{http://www.opengis.net/gml/3.2}LinearRing/{http://www.opengis.net/gml/3.2}pos"):
             words=j.text.split()
-            list.append(str(float(words[0])*scale_x))
-            list.append(str(float(words[1])*scale_y))
-            FOR_MIN_MAX=((float(words[0])*scale_x),(float(words[1])*scale_y))
+            list.append(str(float(words[0])*scale_x+20))
+            list.append(str(float(words[1])*scale_y+20))
+            FOR_MIN_MAX=((float(words[0])*scale_x+20),(float(words[1])*scale_y+20))
             calc_min_max(FOR_MIN_MAX)
-            input = (float(words[0])*scale_x,float(words[1])*scale_y)
+            input = (float(words[0])*scale_x+20,float(words[1])*scale_y+20)
             list_set.append(input)
         canvas.create_polygon(list, outline='black', fill='ivory3', width=2)
         # print(list)
@@ -272,9 +274,9 @@ def main():
         DOOR=[]
         for j in i.findall("{http://www.opengis.net/indoorgml/1.0/core}cellSpaceBoundaryGeometry/{http://www.opengis.net/indoorgml/1.0/core}geometry2D/{http://www.opengis.net/gml/3.2}LineString/{http://www.opengis.net/gml/3.2}pos"):
             words=j.text.split()
-            DOOR.append([float(words[0])*scale_x,float(words[1])*scale_y])
-            sum_x+=float(words[0])*scale_x
-            sum_y+=float(words[1])*scale_y
+            DOOR.append([float(words[0])*scale_x+20,float(words[1])*scale_y+20])
+            sum_x+=float(words[0])*scale_x+20
+            sum_y+=float(words[1])*scale_y+20
         total_door.append((sum_x/2,sum_y/2))
         door_accord[gml_id]=(sum_x/2,sum_y/2)
         door_line.append(LineString([(DOOR[0][0], DOOR[0][1]),(DOOR[1][0], DOOR[1][1])]))

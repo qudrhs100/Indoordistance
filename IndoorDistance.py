@@ -24,6 +24,7 @@ class Graph():
         with the two nodes as a tuple as the key
         e.g. {('X', 'A'): 7, ('X', 'B'): 2, ...}
         """
+
         self.edges = defaultdict(list)
         self.weights = {}
 
@@ -89,8 +90,8 @@ def dijsktra(graph, initial, end):
 ###############################################################################
 
 
-tree = ET.parse('data/313-4F-2D-190612.gml')
-# tree = ET.parse('cellspaceboundary_door.gml')
+# tree = ET.parse('data/313-4F-2D-190612.gml')
+tree = ET.parse('data/Handmade_313.gml')
 # tree = ET.parse('victoriaAirport_IndoorGML_v20.xml')
 # tree = ET.parse('complex.gml')
 root = tree.getroot()
@@ -162,7 +163,6 @@ def processOK():
 
     # print("Caculate button is clicked")
     # print(start_coord, "    ",dest_coord)
-    print(edges)
     for edge in edges:
         graph.add_edge(*edge)
 
@@ -177,7 +177,7 @@ def processOK():
 
 
     PATH=dijsktra(graph, room_door[start_room], room_door[dest_room])
-    print(room_door[start_room], room_door[dest_room])
+    # print(room_door[start_room], room_door[dest_room])
 
     for i,v in enumerate(PATH):
         if i>len(dijsktra(graph, room_door[start_room], room_door[dest_room]))-2:continue
@@ -218,7 +218,7 @@ def visibility():
             A2= (B1[0]-A1[0],B1[1]-A1[1])
             B2 = (C1[0] - B1[0], C1[1] - B1[1])
             # print(angle_between(A2, B2))
-            print("[",B1[0],"," ,B1[1],"]")
+            # print("[",B1[0],"," ,B1[1],"]")
             if(angle_between(A2, B2)<=180):
 
                 # canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
@@ -296,7 +296,7 @@ def click(event):
 
 
 def main():
-    scale_x=2
+    scale_x=1.5
     scale_y=1
     btn = Button(window, text="Calculate", command=processOK,bg='yellow')
 
@@ -311,9 +311,9 @@ def main():
         list_set=[]
         for j in i.findall("./{http://www.opengis.net/indoorgml/1.0/core}cellSpaceGeometry/{http://www.opengis.net/indoorgml/1.0/core}Geometry2D/{http://www.opengis.net/gml/3.2}Polygon/{http://www.opengis.net/gml/3.2}exterior/{http://www.opengis.net/gml/3.2}LinearRing/{http://www.opengis.net/gml/3.2}pos"):
             words=j.text.split()
-            list.append(str(float(words[0])*scale_x))
-            list.append(str(float(words[1])*scale_y))
-            input = (float(words[0])*scale_x,float(words[1])*scale_y)
+            list.append(str(float(words[0])*scale_x+20))
+            list.append(str(float(words[1])*scale_y+20))
+            input = (float(words[0])*scale_x+20,float(words[1])*scale_y+20)
             list_set.append(input)
         canvas.create_polygon(list, outline='black', fill='ivory3', width=2)
         # print(list)
@@ -332,9 +332,9 @@ def main():
         DOOR=[]
         for j in i.findall("{http://www.opengis.net/indoorgml/1.0/core}cellSpaceBoundaryGeometry/{http://www.opengis.net/indoorgml/1.0/core}geometry2D/{http://www.opengis.net/gml/3.2}LineString/{http://www.opengis.net/gml/3.2}pos"):
             words=j.text.split()
-            DOOR.append([float(words[0])*scale_x,float(words[1])*scale_y])
-            sum_x+=float(words[0])*scale_x
-            sum_y+=float(words[1])*scale_y
+            DOOR.append([float(words[0])*scale_x+20,float(words[1])*scale_y+20])
+            sum_x+=float(words[0])*scale_x+20
+            sum_y+=float(words[1])*scale_y+20
         total_door.append((sum_x/2,sum_y/2))
         door_accord[gml_id]=(sum_x/2,sum_y/2)
         canvas.create_line(DOOR[0][0], DOOR[0][1], DOOR[1][0], DOOR[1][1], width=5, fill="blue")
