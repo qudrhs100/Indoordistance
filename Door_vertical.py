@@ -33,7 +33,7 @@ class Graph():
         self.weights[(from_node, to_node)] = weight
         self.weights[(to_node, from_node)] = weight
 # tree = ET.parse('data/313-4F-2D-190612.gml')
-tree = ET.parse('data/Handmade_313.gml')
+tree = ET.parse('data/313_4F_FLOOR.gml')
 root = tree.getroot()
 window = tkinter.Tk()
 
@@ -235,7 +235,7 @@ def click(event):
 
 
 def main():
-    scale_x=1
+    scale_x=1.5
     scale_y=1
     btn = Button(window, text="Calculate", command=processOK,bg='yellow')
     canvas.bind("<Button-1>", click)

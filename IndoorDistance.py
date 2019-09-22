@@ -91,7 +91,7 @@ def dijsktra(graph, initial, end):
 
 
 # tree = ET.parse('data/313-4F-2D-190612.gml')
-tree = ET.parse('data/Handmade_313.gml')
+tree = ET.parse('data/313_4F_FLOOR.gml')
 # tree = ET.parse('victoriaAirport_IndoorGML_v20.xml')
 # tree = ET.parse('complex.gml')
 root = tree.getroot()
@@ -221,7 +221,7 @@ def visibility():
             # print("[",B1[0],"," ,B1[1],"]")
             if(angle_between(A2, B2)<=180):
 
-                # canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
+                canvas.create_oval(B1[0], B1[1], B1[0], B1[1], width=8,outline="green")
                 corner_accord["CORNER"+str(corner_count)]=(B1[0], B1[1])
                 door_and_corner["CORNER"+str(corner_count)]=(B1[0], B1[1])
                 corner_count+=1
@@ -251,7 +251,7 @@ def visibility():
                 test.append((Door_A,Door_B,Line_A,Line_B))
 
         if cnt==0 :
-            # canvas.create_line(Door_A.x, Door_A.y, Door_B.x, Door_B.y, width=2, fill="red")
+            canvas.create_line(Door_A.x, Door_A.y, Door_B.x, Door_B.y, width=2, fill="red")
             temp_A=(Door_A.x,Door_A.y)
             temp_B=(Door_B.x,Door_B.y)
             edges.append((i[0],i[1],euclidean_distance(temp_A,temp_B)))##edge name1, edge name2, euclidean_distance
