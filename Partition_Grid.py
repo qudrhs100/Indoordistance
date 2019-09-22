@@ -33,7 +33,7 @@ class Graph():
         self.weights[(from_node, to_node)] = weight
         self.weights[(to_node, from_node)] = weight
 # tree = ET.parse('data/313-4F-2D-190612.gml')
-tree = ET.parse('data/Handmade_313.gml')
+tree = ET.parse('data/313_4F_FLOOR.gml')
 # tree = ET.parse('victoriaAirport_IndoorGML_v20.xml')
 # tree = ET.parse('complex.gml')
 root = tree.getroot()
@@ -91,7 +91,7 @@ def draw_grid():
     end_x = int(MAX_X)
     start_y = int(MIN_Y)
     end_y = int(MAX_Y)
-    interval = 10
+    interval = 8
     grid_line = []
     for i in range(start_x,end_x,interval):
         for k in range(start_y,end_y,interval):
@@ -318,7 +318,7 @@ def main():
         total_door.append((sum_x/2,sum_y/2))
         door_accord[gml_id]=(sum_x/2,sum_y/2)
         door_line.append(LineString([(DOOR[0][0], DOOR[0][1]),(DOOR[1][0], DOOR[1][1])]))
-        canvas.create_line(DOOR[0][0], DOOR[0][1], DOOR[1][0], DOOR[1][1], width=5, fill="blue")
+        # canvas.create_line(DOOR[0][0], DOOR[0][1], DOOR[1][0], DOOR[1][1], width=5, fill="blue")
 
         door_and_corner[gml_id] = (sum_x/2,sum_y/2)
 
